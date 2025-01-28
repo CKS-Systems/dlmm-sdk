@@ -12,6 +12,23 @@ use anchor_lang::prelude::*;
 use num_traits::Zero;
 use std::cell::Ref;
 
+
+// Same trick as
+// https://github.com/CKS-Systems/manifest/blob/394c3b582d7741974f0aef3f4a11dc336ee10682/programs/manifest/src/quantities.rs#L244
+fn u64_slice_to_u128(a: [u64; 2]) -> u128 {
+    unsafe {
+        let ptr: *const [u64; 2] = &a;
+        *ptr.cast::<u128>()
+    }
+}
+const fn u128_to_u64_slice(a: u128) -> [u64; 2] {
+    unsafe {
+        let ptr: *const u128 = &a;
+        *ptr.cast::<[u64; 2]>()
+    }
+}
+
+
 #[account(zero_copy)]
 #[derive(InitSpace, Debug)]
 pub struct Position {
@@ -246,7 +263,7 @@ impl PositionV2 {
 
         let fee_infos = &mut self.fee_infos[idx];
 
-        let fee_x_per_token_stored = bin.fee_amount_x_per_token_stored;
+        let fee_x_per_token_stored = u64_slice_to_u128(bin.fee_amount_x_per_token_stored);
 
         let new_fee_x: u64 = safe_mul_shr_cast(
             self.liquidity_shares[idx]
@@ -261,7 +278,7 @@ impl PositionV2 {
         fee_infos.fee_x_pending = new_fee_x.safe_add(fee_infos.fee_x_pending)?;
         fee_infos.fee_x_per_token_complete = fee_x_per_token_stored;
 
-        let fee_y_per_token_stored = bin.fee_amount_y_per_token_stored;
+        let fee_y_per_token_stored = u64_slice_to_u128(bin.fee_amount_y_per_token_stored);
 
         let new_fee_y: u64 = safe_mul_shr_cast(
             self.liquidity_shares[idx]
@@ -284,7 +301,7 @@ impl PositionV2 {
 
         let reward_info = &mut self.reward_infos[idx];
         for reward_idx in 0..NUM_REWARDS {
-            let reward_per_token_stored = bin.reward_per_token_stored[reward_idx];
+            let reward_per_token_stored = u64_slice_to_u128(bin.reward_per_token_stored[reward_idx]);
 
             let new_reward: u64 = safe_mul_shr_cast(
                 self.liquidity_shares[idx]

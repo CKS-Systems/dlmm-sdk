@@ -35,6 +35,22 @@ pub fn get_out_amount(
     )
 }
 
+
+// Same trick as
+// https://github.com/CKS-Systems/manifest/blob/394c3b582d7741974f0aef3f4a11dc336ee10682/programs/manifest/src/quantities.rs#L244
+fn u64_slice_to_u128(a: [u64; 2]) -> u128 {
+    unsafe {
+        let ptr: *const [u64; 2] = &a;
+        *ptr.cast::<u128>()
+    }
+}
+const fn u128_to_u64_slice(a: u128) -> [u64; 2] {
+    unsafe {
+        let ptr: *const u128 = &a;
+        *ptr.cast::<[u64; 2]>()
+    }
+}
+
 /// Calculate liquidity share upon deposit
 #[inline]
 pub fn get_liquidity_share(
@@ -74,30 +90,30 @@ pub struct Bin {
     /// Amount of token Y in the bin. This already excluded protocol fees.
     pub amount_y: u64,
     /// Bin price
-    pub price: u128,
+    pub price: [u64; 2],
     /// Liquidities of the bin. This is the same as LP mint supply. q-number
-    pub liquidity_supply: u128,
+    pub liquidity_supply: [u64; 2],
     /// reward_a_per_token_stored
-    pub reward_per_token_stored: [u128; NUM_REWARDS],
+    pub reward_per_token_stored: [[u64; 2]; NUM_REWARDS],
     /// Swap fee amount of token X per liquidity deposited.
-    pub fee_amount_x_per_token_stored: u128,
+    pub fee_amount_x_per_token_stored: [u64; 2],
     /// Swap fee amount of token Y per liquidity deposited.
-    pub fee_amount_y_per_token_stored: u128,
+    pub fee_amount_y_per_token_stored: [u64; 2],
     /// Total token X swap into the bin. Only used for tracking purpose.
-    pub amount_x_in: u128,
+    pub amount_x_in: [u64; 2],
     /// Total token Y swap into he bin. Only used for tracking purpose.
-    pub amount_y_in: u128,
+    pub amount_y_in: [u64; 2],
 }
 
 impl Bin {
     pub fn is_zero_liquidity(&self) -> bool {
-        self.liquidity_supply == 0
+        u64_slice_to_u128(self.liquidity_supply) == 0
     }
     /// Deposit to the bin.
     pub fn deposit(&mut self, amount_x: u64, amount_y: u64, liquidity_share: u128) -> Result<()> {
         self.amount_x = self.amount_x.safe_add(amount_x)?;
         self.amount_y = self.amount_y.safe_add(amount_y)?;
-        self.liquidity_supply = self.liquidity_supply.safe_add(liquidity_share)?;
+        self.liquidity_supply = u128_to_u64_slice(u64_slice_to_u128(self.liquidity_supply).safe_add(liquidity_share)?);
 
         Ok(())
     }
@@ -112,18 +128,18 @@ impl Bin {
 
     /// Get or compute and save bin price if not exists
     pub fn get_or_store_bin_price(&mut self, id: i32, bin_step: u16) -> Result<u128> {
-        if self.price == 0 {
-            self.price = get_price_from_id(id, bin_step)?;
+        if u64_slice_to_u128(self.price) == 0 {
+            self.price = u128_to_u64_slice(get_price_from_id(id, bin_step)?);
         }
 
-        Ok(self.price)
+        Ok(u64_slice_to_u128(self.price))
     }
 
     /// Update fee per liquidity stored. Used for claiming swap fee later.
     pub fn update_fee_per_token_stored(&mut self, fee: u64, swap_for_y: bool) -> Result<()> {
         let fee_per_token_stored: u128 = safe_shl_div_cast(
             fee.into(),
-            self.liquidity_supply
+            u64_slice_to_u128(self.liquidity_supply)
                 .safe_shr(SCALE_OFFSET.into())?
                 .try_into()
                 .map_err(|_| LBError::TypeCastFailed)?,
@@ -134,13 +150,12 @@ impl Bin {
         // Fee was charged at swap-in side
         if swap_for_y {
             // Change to wrapping add later
-            self.fee_amount_x_per_token_stored = self
-                .fee_amount_x_per_token_stored
-                .safe_add(fee_per_token_stored)?;
+            self.fee_amount_x_per_token_stored = u128_to_u64_slice(
+                u64_slice_to_u128(self.fee_amount_x_per_token_stored)
+                .safe_add(fee_per_token_stored)?);
         } else {
-            self.fee_amount_y_per_token_stored = self
-                .fee_amount_y_per_token_stored
-                .safe_add(fee_per_token_stored)?;
+            self.fee_amount_y_per_token_stored = u128_to_u64_slice(u64_slice_to_u128(self.fee_amount_y_per_token_stored)
+                .safe_add(fee_per_token_stored)?);
         }
         Ok(())
     }
@@ -257,7 +272,7 @@ impl Bin {
         self.amount_x = self.amount_x.safe_sub(out_amount_x)?;
         self.amount_y = self.amount_y.safe_sub(out_amount_y)?;
 
-        self.liquidity_supply = self.liquidity_supply.safe_sub(liquidity_share)?;
+        self.liquidity_supply = u128_to_u64_slice(u64_slice_to_u128(self.liquidity_supply).safe_sub(liquidity_share)?);
 
         Ok((out_amount_x, out_amount_y))
     }
@@ -268,7 +283,7 @@ impl Bin {
         let out_amount_x = safe_mul_div_cast(
             liquidity_share,
             self.amount_x.into(),
-            self.liquidity_supply,
+            u64_slice_to_u128(self.liquidity_supply),
             Rounding::Down,
         )?;
 
@@ -276,7 +291,7 @@ impl Bin {
         let out_amount_y = safe_mul_div_cast(
             liquidity_share,
             self.amount_y.into(),
-            self.liquidity_supply,
+            u64_slice_to_u128(self.liquidity_supply),
             Rounding::Down,
         )?;
         Ok((out_amount_x, out_amount_y))
@@ -360,8 +375,8 @@ impl Bin {
 
     /// Accumulate amount X and Y swap into the bin for analytic purpose.
     pub fn accumulate_amounts_in(&mut self, amount_x_in: u64, amount_y_in: u64) {
-        self.amount_x_in = self.amount_x_in.wrapping_add(amount_x_in.into());
-        self.amount_y_in = self.amount_y_in.wrapping_add(amount_y_in.into());
+        self.amount_x_in = u128_to_u64_slice(u64_slice_to_u128(self.amount_x_in).wrapping_add(amount_x_in.into()));
+        self.amount_y_in = u128_to_u64_slice(u64_slice_to_u128(self.amount_y_in).wrapping_add(amount_y_in.into()));
     }
 }
 
@@ -418,7 +433,7 @@ impl BinArray {
         if version == LayoutVersion::V0 {
             self.version = LayoutVersion::V1.into();
             for bin in self.bins.iter_mut() {
-                bin.liquidity_supply = bin.liquidity_supply.safe_shl(SCALE_OFFSET.into())?;
+                bin.liquidity_supply = u128_to_u64_slice(u64_slice_to_u128(bin.liquidity_supply).safe_shl(SCALE_OFFSET.into())?);
             }
         }
         Ok(())
@@ -511,19 +526,19 @@ impl BinArray {
             let reward_info = &mut lb_pair.reward_infos[reward_idx];
 
             if reward_info.initialized() {
-                if bin.liquidity_supply > 0 {
+                if u64_slice_to_u128(bin.liquidity_supply) > 0 {
                     let reward_per_token_stored_delta = reward_info
                         .calculate_reward_per_token_stored_since_last_update(
                             current_time,
-                            bin.liquidity_supply
+                            u64_slice_to_u128(bin.liquidity_supply)
                                 .safe_shr(SCALE_OFFSET.into())?
                                 .try_into()
                                 .map_err(|_| LBError::TypeCastFailed)?,
                         )?;
 
-                    bin.reward_per_token_stored[reward_idx] = bin.reward_per_token_stored
-                        [reward_idx]
-                        .safe_add(reward_per_token_stored_delta)?;
+                    bin.reward_per_token_stored[reward_idx] = u128_to_u64_slice(u64_slice_to_u128(bin.reward_per_token_stored
+                        [reward_idx])
+                        .safe_add(reward_per_token_stored_delta)?);
                 } else {
                     // Time period which the reward was distributed to empty bin
                     let time_period =
