@@ -19,6 +19,220 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Security
 
+## @meteora-ag/dlmm [1.5.0] - PR #201
+
+### Changed
+
+- `seedLiquidity` now return `costBreakdown` field for account rental in `SeedLiquidityResponse`.
+- `seedLiquiditySingleBin` now return `SeedLiquiditySingleBinResponse` instead of `TransactionInstruction[]`. `SeedLiquiditySingleBinResponse` has `costBreakdown` field for account rental.
+
+### Fixed
+
+- Fixed `POSITION_FEE` and `BIN_ARRAY_FEE` account rental cost constant.
+
+## @meteora-ag/dlmm [1.4.11] - PR #195
+
+### Fixed
+
+- Fixed all claim method not working if position no liquidity
+
+## @meteora-ag/dlmm [1.4.10] - PR #194
+
+### Fixed
+
+- Fixed `createClaimBuildMethod` return undefined;
+
+## @meteora-ag/dlmm [1.4.9] - PR #193
+
+### Fixed
+
+- Fixed readme `Remove Liquidity` section
+
+## @meteora-ag/dlmm [1.4.8] - PR #192
+
+### Fixed
+
+- Fixed `getPositionsByUserAndLbPair` assertion
+
+## @meteora-ag/dlmm [1.4.7] - PR #191
+
+### Fixed
+
+- Fixed `seedLiquiditySingleBin` create token account for position owner token proof.
+- FIxed `syncWithMarketPrice` not initializing bitmap extensions if needed
+
+## @meteora-ag/dlmm [1.4.6] - PR #190
+
+### Fixed
+
+- Fixed `seedLiquiditySingleBin` function
+
+## @meteora-ag/dlmm [1.4.5] - PR #162
+
+### Changed
+
+- `calculateFeeInfo` added new optional `baseFeePowerFactor` parameter
+
+#### Breaking
+
+- `getPairPubkeyIfExists` added new `baseFeePowerFactor` parameter
+- `getAllPresetParameters` now return `presetParameter` and `presetParameter2` accounts instead of only `presetParameter`
+- `removeLiquidity`, `binIds` parameter has been replaced by `fromBinId` and `toBinId` which represent the bin range to be removed
+
+- `toAmountsBothSideByStrategy`, `fromWeightDistributionToAmount`, `toAmountBothSide` added `mintX`, `mintY` and `clock` parameters
+- `toAmountAskSide` added `mintX` and `clock` parameters
+- `toAmountBidSide` added `mintX` and `clock` parameters
+
+- Rename `LBCLMM_PROGRAM_IDS` to `DLMM_PROGRAM_IDS`
+- `computeBaseFactorFromFeeBps` return `baseFactor` + `baseFeePowerFactor` instead of only `baseFactor`
+
+### Added
+
+- `createCustomizablePermissionlessLbPair2`, similar as `createCustomizablePermissionlessLbPair` but support token 2022.
+- `createLbPair2`, similar as `createLbPair` but support token 2022. It require `PresetParameter2` account instead of `PresetParameter` which allow pool to have higher base fee.
+- `closePositionIfEmpty`. Will close the position only if it's empty, else do nothing.
+
+- `derivePresetParameterWithIndex`. Used to derive `PresetParameter2` account for `createLbPair2`
+- `deriveLbPairWithPresetParamWithIndexKey`. Used to derive `LbPair` account for `createLbPair2` using `PresetParameter2` account
+- `deriveTokenBadge`. Used to derive `TokenBadge` account for whitelisted token2022 mint.
+
+- `getTokenProgramId` to return token X and token Y program id for the pair
+
+- `getBinArrayIndexesCoverage` to return bin array indexes required for the given bin range
+- `getBinArrayKeysCoverage` to return bin array addresses required for the given bin range
+- `getBinArrayAccountMetasCoverage` to return bin array account metas required for the given bin range
+
+- `getExtraAccountMetasForTransferHook` to return extra account metas required for transfer hook
+- `calculateTransferFeeIncludedAmount` to calculate transfer fee included amount for token2022
+- `calculateTransferFeeExcludedAmount` to calculate transfer fee excluded amount for token2022
+
+### Deprecated
+
+- `initializePositionAndAddLiquidityByWeight`. Use `initializePositionAndAddLiquidityByStrategy` instead which support both token and token 2022 program.
+- `addLiquidityByWeight`. Use `addLiquidityByStrategy` instead which support both token and token2022.
+
+### Removed
+
+- `getWithdrawSingleSideAmount`. Unused.
+- `createPermissionLbPair`. Admin-only function.
+- `findSwappableMinMaxBinId`. Unused anymore.
+
+## cli [0.5.0]
+
+### Changed
+
+- File structure refactoring
+- Switched all the existing functions to support token 2022
+
+### Changed
+
+- `seed_liquidity` doesn't require file snapshot to support resume anymore
+
+### Removed
+
+- `seed_liquidity` and `seed_liquidity_single_bin`. Please use `seed_liquidity_by_operator` and `seed_liquidity_single_bin_by_operator`
+
+### Added
+
+- Admin function `initialize_token_badge` to initialize token badge for token 2022
+
+## lb_clmm [0.7.0]
+
+- DEPRECATED. Use `dlmm_interface` for types and `commons` for related account functions.
+
+## dlmm_interface [0.9.0]
+
+- Program interface generated using `solores`
+
+## commons [0.3.0]
+
+- Added token 2022 supportive functions.
+- Added position account supportive functions.
+
+## @meteora-ag/dlmm [1.4.2] - PR #183
+
+### Added
+
+- Add `getCustomizablePermissionlessLbPairIfExists` function to fetch existing customizable permissionless LB pair
+
+### Changed
+
+- remove CU estimation for `seedLiquidity`
+
+### Fixed
+
+- Fix incorrect enable/disable mapping in `setPairStatusPermissionless`
+
+## @meteora-ag/dlmm [1.4.1] - PR #182
+
+### Changed
+
+- Update readme to include `claimFee`
+
+## @meteora-ag/dlmm [1.4.0] - PR #181
+
+### Changed
+
+- Revamp StrategyType, now only have `StrategyType.Spot`, `StrategyType.BidAsk` & `StrategyType.Curve`
+
+## @meteora-ag/dlmm [1.3.16] - PR #179
+
+### Changed
+
+- Add `feeOwner`, `operator`, `lockReleasePoint`, `shouldSeedPositionOwner`, `txPayer` parameters for `seedLiquidity` function
+
+## @meteora-ag/dlmm [1.3.16] - PR #179
+
+### Changed
+
+- Add `feeOwner`, `operator`, `lockReleasePoint`, `shouldSeedPositionOwner`, `txPayer` parameters for `seedLiquidity` function
+
+## @meteora-ag/dlmm [1.3.15] - PR #173
+
+### Added
+
+- Add param `enablePoolOnOffControl` to `createCustomizablePermissionlessLbPair` function.
+- Add `setPairStatusPermissionless` function. This require pool field `creator_pool_on_off_control` to be true and pair type is `CustomizablePermissionless`. Pool creator can enable/disable the pair anytime before the pool is opened / activated. Once the pool activation time is passed, the pool creator can only enable the pair. Useful for token launches which do not have fixed activation time.
+
+## cli [0.4.2] - PR #173
+
+- Add param `creator_pool_on_off_control` to `InitializeCustomizablePermissionlessLbPair` function.
+- Add `set_pair_status_permissionless` function.
+
+## @meteora-ag/dlmm [1.3.14] - PR #167
+
+### Added
+
+- Add param `maxExtraBinArrays` to `swapQuote` and `swapQuoteExactOut` functions.
+
+## @meteora-ag/dlmm [1.3.13] - PR #166
+
+### Added
+
+- Add `ts-client` function `getLbPairLockInfo`.
+
+## @meteora-ag/dlmm [1.3.12] - PR #161
+
+### Added
+
+- Remove `@solana-developers/helpers` dependency.
+
+## cli [0.4.1] - PR #160
+
+### Added
+
+- Add admin commmand `set_pair_status`.
+
+### Removed
+
+- Removed admin command `toggle_pair_status`.
+
+## @meteora-ag/dlmm [1.3.11] - PR #160
+
+### Added
+
+- Add admin function `setPairStatus`.
+
 ## @meteora-ag/dlmm [1.3.10] - PR #159
 
 ### Changed
@@ -41,7 +255,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- Fix `getOrCreateATAInstruction` to use `createAssociatedTokenAccountIdempotentInstruction` 
+- Fix `getOrCreateATAInstruction` to use `createAssociatedTokenAccountIdempotentInstruction`
 
 ## @meteora-ag/dlmm [1.3.7] - PR #143
 
@@ -54,7 +268,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Refactored; remove `position(V1)` interaction from SDK
-- Throw error in `removeLiquidity` function if position doesn't have any liquidity 
+- Throw error in `removeLiquidity` function if position doesn't have any liquidity
 
 ### Fixed
 
