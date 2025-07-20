@@ -2,7 +2,7 @@ use crate::*;
 use anchor_spl::token::spl_token;
 use anchor_spl::token_2022::spl_token_2022;
 use ruint::aliases::U1024;
-use solana_sdk::pubkey::Pubkey;
+use solana_program::pubkey::Pubkey;
 use std::ops::Deref;
 use std::ops::Shl;
 use std::ops::Shr;

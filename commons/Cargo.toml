@@ -8,19 +8,25 @@ authors = ["tian <tian@racoons.dev>"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
+[features]
+default = ["client"]
+client = ["dep:anchor-client", "dep:tokio", "dep:solana-sdk", "dep:async-trait"]
+bpf = []
+
 [dependencies]
-anchor-client = { workspace = true, features = ["async"] }
+anchor-client = { workspace = true, features = ["async"], optional = true }
 anchor-spl = { workspace = true }
 anyhow = { workspace = true }
 dlmm_interface = { path = "../dlmm_interface" }
-tokio = { workspace = true, features = ["full", "parking_lot"] }
+tokio = { workspace = true, features = ["full", "parking_lot"], optional = true }
 bincode = { workspace = true }
-solana-sdk = { workspace = true }
+solana-sdk = { workspace = true, optional = true }
+solana-program = "1.17.0"
 ruint = { workspace = true }
 num-traits = { workspace = true }
 num-integer = { workspace = true }
 bytemuck = { workspace = true }
-async-trait = { workspace = true }
+async-trait = { workspace = true, optional = true }
 spl-transfer-hook-interface = { workspace = true }
 
 [dev-dependencies]

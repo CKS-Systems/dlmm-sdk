@@ -13,9 +13,6 @@ pub use extensions::*;
 pub mod pda;
 pub use pda::*;
 
-pub mod quote;
-pub use quote::*;
-
 pub mod seeds;
 pub use seeds::*;
 
@@ -25,10 +22,20 @@ pub use math::*;
 pub mod typedefs;
 pub use typedefs::*;
 
+#[cfg(feature = "client")]
+pub mod quote;
+#[cfg(feature = "client")]
+pub use quote::*;
+
+#[cfg(feature = "client")]
 pub mod rpc_client_extension;
 
+#[cfg(feature = "client")]
 pub mod account_filters;
+#[cfg(feature = "client")]
 pub use account_filters::*;
 
+#[cfg(feature = "client")]
 pub mod token_2022;
+#[cfg(feature = "client")]
 pub use token_2022::*;

@@ -1,5 +1,5 @@
 use super::seeds::*;
-use anchor_client::solana_sdk::pubkey::Pubkey;
+use solana_program::pubkey::Pubkey;
 use std::{cmp::max, cmp::min};
 
 pub fn derive_lb_pair_with_preset_parameter_key(

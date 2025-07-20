@@ -1,5 +1,5 @@
-use solana_sdk::pubkey;
-use solana_sdk::pubkey::Pubkey;
+use solana_program::pubkey;
+use solana_program::pubkey::Pubkey;
 
 pub const BIN_ARRAY: &[u8] = b"bin_array";
 
